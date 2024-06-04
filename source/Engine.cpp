@@ -38,6 +38,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Hazard.h"
 #include "Interface.h"
 #include "Logger.h"
+#include "Lua.h"
 #include "MapPanel.h"
 #include "Mask.h"
 #include "Messages.h"
@@ -293,6 +294,8 @@ Engine::Engine(PlayerInfo &player)
 				system->Position() - player.GetSystem()->Position());
 
 	GameData::SetHaze(player.GetSystem()->Haze(), true);
+
+	Lua::runInitScripts();
 }
 
 
@@ -1252,6 +1255,7 @@ void Engine::EnterSystem()
 	doEnter = true;
 	doEnterLabels = true;
 	player.IncrementDate();
+	Lua::runDailyScripts();
 	const Date &today = player.GetDate();
 
 	const System *system = flagship->GetSystem();

@@ -15,6 +15,7 @@
           "name": "libuuid",
           "platform": "linux"
         },
+        "lua",
         "openal-soft",
         {
           "name": "openal-soft",

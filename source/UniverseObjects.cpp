@@ -20,6 +20,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Files.h"
 #include "Information.h"
 #include "Logger.h"
+#include "Lua.h"
 #include "Sprite.h"
 #include "SpriteSet.h"
 #include "TaskQueue.h"
@@ -375,6 +376,8 @@ void UniverseObjects::LoadFile(const string &path, bool debugMode)
 			phrases.Get(node.Token(1))->Load(node);
 		else if(key == "planet" && node.Size() >= 2)
 			planets.Get(node.Token(1))->Load(node, wormholes);
+		else if(key == "script" && node.Size() >= 2)
+			Lua::loadSource(node.Token(1));
 		else if(key == "ship" && node.Size() >= 2)
 		{
 			// Allow multiple named variants of the same ship model.

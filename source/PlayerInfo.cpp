@@ -27,6 +27,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "GameData.h"
 #include "Government.h"
 #include "Logger.h"
+#include "Lua.h"
 #include "Messages.h"
 #include "Outfit.h"
 #include "Person.h"
@@ -132,6 +133,8 @@ void PlayerInfo::Clear()
 
 	delete transactionSnapshot;
 	transactionSnapshot = nullptr;
+
+	Lua::runInitScripts();
 }
 
 
@@ -646,6 +649,8 @@ void PlayerInfo::Die(int response, const shared_ptr<Ship> &capturer)
 		if(it != ships.end())
 			ships.erase(it);
 	}
+
+// 	Lua::runDieScripts();
 }
 
 
@@ -787,6 +792,8 @@ void PlayerInfo::IncrementDate()
 	// Reset the reload counters for all your ships.
 	for(const shared_ptr<Ship> &ship : ships)
 		ship->GetArmament().ReloadAll();
+
+	Lua::runDailyScripts();
 }
 
 

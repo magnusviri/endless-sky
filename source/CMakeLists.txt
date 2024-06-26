@@ -1,7 +1,7 @@
 add_library(EndlessSkyLib OBJECT)
 
 # Set the appropriate compiler flags.
-target_include_directories(EndlessSkyLib PUBLIC "${LIBMAD_INCLUDE_DIR}")
+target_include_directories(EndlessSkyLib PUBLIC "${LIBMAD_INCLUDE_DIR}" ${LUABRIDGE3_INCLUDE_DIRS})
 if(MSVC)
 	target_compile_options(EndlessSkyLib PUBLIC "/W3" "/permissive-" "/sdl" "/GR-" "/analyze-"
 		"-Wno-nonportable-include-path" "$<$<CONFIG:Release>:/Gy;/Oi>")
@@ -164,6 +164,12 @@ target_sources(EndlessSkyLib PRIVATE
 	JumpTypes.h
 	Logger.cpp
 	Logger.h
+	Lua.cpp
+	Lua.h
+	LuaImpl.cpp
+	LuaImpl.h
+	LuaPlugin.cpp
+	LuaPlugin.h
 	LineShader.cpp
 	LineShader.h
 	LoadPanel.cpp

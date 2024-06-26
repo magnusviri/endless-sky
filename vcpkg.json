@@ -3,7 +3,9 @@
     {
       "name": "openal-soft",
       "platform": "osx"
-    }
+    },
+	"lua",
+	"luabridge3"
   ],
   "features": {
     "system-libs": {

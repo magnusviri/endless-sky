@@ -42,9 +42,9 @@ namespace {
 LuaPlugin::LuaPlugin()
 {
 	auto L = Lua::get();
-
 	this->daily = lua_fn_field_ref(L, "es_daily");
 	this->init = lua_fn_field_ref(L, "es_init");
+	this->die = lua_fn_field_ref(L, "es_die");
 }
 
 void LuaPlugin::runDaily()
@@ -55,4 +55,9 @@ void LuaPlugin::runDaily()
 void LuaPlugin::runInit()
 {
 	runRawChecked(Lua::get(), init);
+}
+
+void LuaPlugin::runDie()
+{
+	runRawChecked(Lua::get(), die);
 }

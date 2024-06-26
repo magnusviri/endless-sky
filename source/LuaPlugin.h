@@ -24,8 +24,10 @@ public:
 
 	void runDaily();
 	void runInit();
+	void runDie();
 
 private:
 	int daily = LUA_NOREF;
 	int init = LUA_NOREF;
+	int die = LUA_NOREF;
 };

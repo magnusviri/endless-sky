@@ -24,6 +24,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "PlayerInfo.h"
 #include "System.h"
+#include "Planet.h"
 
 
 #include <iostream>
@@ -91,10 +92,6 @@ bool Lua::registerPlayer(PlayerInfo &player)
 	return true;
 }
 
-// System* GetSystemWrapper(const PlayerInfo& playerInfo) {
-//     return new System(playerInfo.GetSystem());
-// }
-
 bool Lua::init()
 {
 	L = luaL_newstate();
@@ -106,14 +103,18 @@ bool Lua::init()
 		.beginNamespace("ES")
 			.beginClass<System>("System")
 				.addFunction("Name", &System::Name)
+				.addFunction("VisibleNeighbors", &System::VisibleNeighbors)
+			.endClass()
+			.beginClass<Planet>("Planet")
+				.addFunction("Name", &Planet::Name)
 			.endClass()
 			.beginClass<PlayerInfo>("PlayerInfo")
 				.addFunction("IsDead", &PlayerInfo::IsDead)
 				.addFunction("FirstName", &PlayerInfo::FirstName)
 				.addFunction("LastName", &PlayerInfo::LastName)
 				.addFunction("GetSystem", &PlayerInfo::GetSystem)
-// 				.addFunction("GetPreviousSystem", &PlayerInfo::GetPreviousSystem)
-// 				.addFunction("GetPlanet", &PlayerInfo::GetPlanet)
+				.addFunction("GetPreviousSystem", &PlayerInfo::GetPreviousSystem)
+				.addFunction("GetPlanet", &PlayerInfo::GetPlanet)
 // 				.addFunction("GetStellarObject", &PlayerInfo::GetStellarObject)
 // 				.addFunction("Land", &PlayerInfo::Land)
 // 				.addFunction("TakeOff", &PlayerInfo::TakeOff)
@@ -157,9 +158,6 @@ void Lua::runDailyScripts()
 {
 	for(auto &plugin : plugins)
 	{
-		luabridge::LuaRef addAndDouble = luabridge::getGlobal(L, "addAndDouble");
-		luabridge::LuaResult res = addAndDouble(15, 12);
-
 		plugin.runDaily();
 	}
 }
@@ -168,10 +166,14 @@ void Lua::runInitScripts()
 {
 	for(auto &plugin : plugins)
 	{
-		luabridge::LuaRef addAndDouble = luabridge::getGlobal(L, "addAndDouble");
-		luabridge::LuaResult res = addAndDouble(15, 12);
-
-
 		plugin.runInit();
+	}
+}
+
+void Lua::runDieScripts()
+{
+	for(auto &plugin : plugins)
+	{
+		plugin.runDie();
 	}
 }

@@ -24,10 +24,10 @@ public:
 
 	void runDaily();
 	void runInit();
-	void runDie();
+	void runAddCrew(int crewCount);
 
 private:
 	int daily = LUA_NOREF;
 	int init = LUA_NOREF;
-	int die = LUA_NOREF;
+	int addCrew = LUA_NOREF;
 };

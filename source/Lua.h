@@ -40,7 +40,7 @@ namespace Lua
 	bool loadSource(const std::string &path, const std::string &path2);
 	void runDailyScripts();
 	void runInitScripts();
-	void runDieScripts();
+	void runAddCrew(int crewCount);
 
 	lua_State *get();
 	void dumpstack();

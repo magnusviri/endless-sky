@@ -27,6 +27,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "GameData.h"
 #include "HiringPanel.h"
 #include "Interface.h"
+#include "Lua.h"
 #include "MapDetailPanel.h"
 #include "MessageLogPanel.h"
 #include "MissionPanel.h"

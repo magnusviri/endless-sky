@@ -28,6 +28,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Government.h"
 #include "JumpTypes.h"
 #include "Logger.h"
+#include "Lua.h"
 #include "Mask.h"
 #include "Messages.h"
 #include "Phrase.h"
@@ -2931,6 +2932,8 @@ int Ship::CrewValue() const
 
 void Ship::AddCrew(int count)
 {
+	if ( IsYours() )
+		Lua::runAddCrew(count);
 	crew = min<int>(crew + count, attributes.Get("bunks"));
 }
 

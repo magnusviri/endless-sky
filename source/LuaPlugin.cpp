@@ -16,10 +16,13 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "LuaPlugin.h"
 
 #include "Logger.h"
+#include <functional>
 
 using namespace std;
 
 namespace {
+	using ParamAdder = std::function<int(lua_State*)>;
+
 	int lua_fn_field_ref(lua_State *L, const char *fieldname)
 	{
 		const auto field_ty = lua_getfield(L, 1, fieldname);
@@ -30,11 +33,18 @@ namespace {
 		return LUA_NOREF;
 	}
 
-	void runRawChecked(lua_State *L, int raw) {
+	void runRawChecked(lua_State *L, int raw, const char* funcName, ParamAdder paramAdder = nullptr) {
 		if(raw != LUA_NOREF)
 		{
-			lua_rawgeti(Lua::get(), LUA_REGISTRYINDEX, raw);
-			lua_call(Lua::get(), 0, 0);
+			lua_rawgeti(L, LUA_REGISTRYINDEX, raw);
+			int parameterCount = paramAdder ? paramAdder(L) : 0;
+			int result = lua_pcall(L, parameterCount, 0, 0);
+			if (result != LUA_OK)
+			{
+				const char* errorMsg = lua_tostring(L, -1);
+				Logger::LogError(string("Error calling ") + funcName + ": " + (errorMsg ? errorMsg : "Unknown error"));
+				lua_pop(L, 1);
+			}
 		}
 	}
 }
@@ -44,20 +54,25 @@ LuaPlugin::LuaPlugin()
 	auto L = Lua::get();
 	this->daily = lua_fn_field_ref(L, "es_daily");
 	this->init = lua_fn_field_ref(L, "es_init");
-	this->die = lua_fn_field_ref(L, "es_die");
+	this->addCrew = lua_fn_field_ref(L, "es_add_crew");
 }
 
 void LuaPlugin::runDaily()
 {
-	runRawChecked(Lua::get(), daily);
+	runRawChecked(Lua::get(), daily, "es_daily");
 }
 
 void LuaPlugin::runInit()
 {
-	runRawChecked(Lua::get(), init);
+	runRawChecked(Lua::get(), init, "es_init");
 }
 
-void LuaPlugin::runDie()
+void LuaPlugin::runAddCrew(int crewCount)
 {
-	runRawChecked(Lua::get(), die);
+	auto addCrewParams = [crewCount](lua_State *L) -> int {
+		lua_pushinteger(L, crewCount);
+		return 1;
+	};
+
+	runRawChecked(Lua::get(), addCrew, "es_add_crew", addCrewParams);
 }

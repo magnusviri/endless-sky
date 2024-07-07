@@ -13,21 +13,51 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Lua.h"
+#ifndef ES_LUA_PLUGIN_H_
+#define ES_LUA_PLUGIN_H_
 
-#include <string>
+#include "PlayerInfo.h"
+#include <filesystem>
+
+extern "C"
+{
+	#include <lauxlib.h>
+	#include <lua.h>
+	#include <lualib.h>
+}
+
+using namespace std;
+
+namespace fs = std::filesystem;
 
 class LuaPlugin
 {
 public:
-	LuaPlugin();
+	LuaPlugin(const std::string &name, const std::string &path, PlayerInfo *player);
+	~LuaPlugin() = default;
+
+	LuaPlugin(LuaPlugin&&) = default;
+	LuaPlugin& operator=(LuaPlugin&&) = default;
+
+	LuaPlugin(const LuaPlugin&) = delete;
+	LuaPlugin& operator=(const LuaPlugin&) = delete;
 
 	void runDaily();
 	void runInit();
 	void runAddCrew(int crewCount);
 
 private:
+	struct LuaDeleter {
+		void operator()(lua_State* Lpointer) const {
+			if (Lpointer) lua_close(Lpointer);
+		}
+	};
+
+	std::unique_ptr<lua_State, LuaDeleter> Lpointer;
+	fs::path plugin_dir;
 	int daily = LUA_NOREF;
 	int init = LUA_NOREF;
 	int addCrew = LUA_NOREF;
 };
+
+#endif // ES_LUA_PLUGIN_H_

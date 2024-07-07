@@ -18,11 +18,17 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Lua.h"
 
+extern "C"
+{
+    #include <lauxlib.h>
+    #include <lua.h>
+    #include <lualib.h>
+}
+
 namespace LuaImpl
 {
-	void registerAll();
-
-	void registerFunction(lua_CFunction func, const char *name);
+	void registerAll(lua_State *L);
+	void registerFunction(lua_State *L, lua_CFunction func, const char *name);
 }
 
 #endif

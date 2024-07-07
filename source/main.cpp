@@ -79,8 +79,6 @@ void InitConsole();
 // Entry point for the EndlessSky executable
 int main(int argc, char *argv[])
 {
-	Lua::init();
-
 	// Handle command-line arguments
 #ifdef _WIN32
 	if(argc > 1)
@@ -228,8 +226,6 @@ int main(int argc, char *argv[])
 		GameWindow::ExitWithError(error.what(), !isTesting);
 		return 1;
 	}
-
-	Lua::close();
 
 	// Remember the window state and preferences if quitting normally.
 	Preferences::Set("maximized", GameWindow::IsMaximized());

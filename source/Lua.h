@@ -16,34 +16,19 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #ifndef ES_LUA_H_
 #define ES_LUA_H_
 
+#include "PlayerInfo.h"
+
 #include <bitset>
 #include <optional>
 #include <string>
-#include "PlayerInfo.h"
-
-extern "C"
-{
-    #include <lauxlib.h>
-    #include <lua.h>
-    #include <lualib.h>
-}
-
-#include <luabridge3/LuaBridge/LuaBridge.h>
 
 namespace Lua
 {
-	bool init();
-	void close();
-
-	bool registerPlayer(PlayerInfo &player);
-
-	bool loadSource(const std::string &path, const std::string &path2);
+	void registerPlayer(PlayerInfo &player);
+	void loadSource(const std::string &name, const std::string &path);
 	void runDailyScripts();
 	void runInitScripts();
 	void runAddCrew(int crewCount);
-
-	lua_State *get();
-	void dumpstack();
 }
 
 #endif

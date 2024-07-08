@@ -198,6 +198,62 @@ extern "C" int debug(lua_State *L)
 	return 0;
 }
 
+// DataWriter Helper functions for overloaded and template methods
+void DataWriterWrite(DataWriter& self) {
+    self.Write();
+}
+
+void DataWriterWriteString(DataWriter& self, const std::string& value) {
+    self.Write(value);
+}
+
+void DataWriterWriteDouble(DataWriter& self, double value) {
+    self.Write(value);
+}
+
+void DataWriterWriteInt(DataWriter& self, int value) {
+    self.Write(value);
+}
+
+void DataWriterWriteDataNode(DataWriter& self, const DataNode& node) {
+    self.Write(node);
+}
+
+void DataWriterWriteTokenString(DataWriter& self, const std::string& value) {
+    self.WriteToken(value);
+}
+
+void DataWriterWriteTokenDouble(DataWriter& self, double value) {
+    self.WriteToken(value);
+}
+
+void DataWriterWriteTokenInt(DataWriter& self, int value) {
+    self.WriteToken(value);
+}
+
+// DataNode Helper functions
+static double DataNodeValue(DataNode& node, int index) {
+    return node.Value(index);
+}
+
+static bool DataNodeIsNumber(DataNode& node, int index) {
+    return node.IsNumber(index);
+}
+
+static bool DataNodeIsBool(DataNode& node, int index) {
+    return node.IsBool(index);
+}
+
+// Helper function to get children as a vector of pointers
+// This doesn't work
+static std::vector<const DataNode*> DataNodeGetChildren(const DataNode& node) {
+    std::vector<const DataNode*> children;
+    for (const auto& child : node) {
+        children.push_back(&child);
+    }
+    return children;
+}
+
 void LuaImpl::registerFunction(lua_State *L, lua_CFunction func, const char *name)
 {
 	lua_register(L, name, func);
@@ -411,16 +467,23 @@ void LuaImpl::registerAll(lua_State *L)
 // // 				.addFunction("DamageProfile", &DamageProfile::DamageProfile)
 			.endClass()
 			.beginClass<DataFile>("DataFile")
-// 				.addFunction("BoolValue", &DataFile::BoolValue)
-// 				.addFunction("DataNode", &DataFile::DataNode)
-// // 				.addFunction("IsBool", &DataFile::IsBool)
-// // 				.addFunction("IsBool", &DataFile::IsBool)
-// // 				.addFunction("IsNumber", &DataFile::IsNumber)
-// // 				.addFunction("IsNumber", &DataFile::IsNumber)
-// 				.addFunction("PrintTrace", &DataFile::PrintTrace)
-// // 				.addFunction("Value", &DataFile::Value)
-// // 				.addFunction("Value", &DataFile::Value)
 			.endClass()
+            .beginClass<DataNode>("DataNode")
+                .addFunction("BoolValue", &DataNode::BoolValue)
+                .addFunction("HasChildren", &DataNode::HasChildren)
+                .addFunction("IsBool", &DataNodeIsBool) // why is this a nil value in Lua?
+                .addFunction("IsNumber", &DataNodeIsNumber) // why is this a nil value in Lua?
+                .addFunction("PrintTrace", &DataNode::PrintTrace)
+                .addFunction("Size", &DataNode::Size)
+                .addFunction("Token", &DataNode::Token)
+                .addFunction("Tokens", &DataNode::Tokens)
+                .addFunction("Value", &DataNodeValue) // why is this a nil value in Lua?
+//                 .addFunction("GetChildren", [](const DataNode& node) -> std::vector<const DataNode*> {
+//                     return DataNodeGetChildren(node);
+//                 })
+                .addFunction("GetChildren", &DataNodeGetChildren)
+
+            .endClass()
 			.beginClass<Date>("Date")
 				.addFunction("Day", &Date::Day)
 				.addFunction("DaysSinceEpoch", &Date::DaysSinceEpoch)
@@ -865,20 +928,23 @@ void LuaImpl::registerAll(lua_State *L)
 // 				.addFunction("MaximumHeight", &ItemInfoDisplay::MaximumHeight)
 // 				.addFunction("PanelWidth", &ItemInfoDisplay::PanelWidth)
 			.endClass()
+            .beginClass<DataWriter>("DataWriter")
+                .addConstructor<void(*)(const std::string&)>()
+                .addConstructor<void(*)()>()
+                .addFunction("SaveToPath", &DataWriter::SaveToPath)
+                .addFunction("Write", &DataWriterWrite)
+                .addFunction("WriteString", &DataWriterWriteString)
+                .addFunction("WriteDouble", &DataWriterWriteDouble)
+                .addFunction("WriteInt", &DataWriterWriteInt)
+                .addFunction("WriteDataNode", &DataWriterWriteDataNode)
+                .addFunction("BeginChild", &DataWriter::BeginChild)
+                .addFunction("EndChild", &DataWriter::EndChild)
+                .addFunction("WriteComment", &DataWriter::WriteComment)
+                .addFunction("WriteTokenString", &DataWriterWriteTokenString)
+                .addFunction("WriteTokenDouble", &DataWriterWriteTokenDouble)
+                .addFunction("WriteTokenInt", &DataWriterWriteTokenInt)
+            .endClass()
 // 			.beginClass<JumpType>("JumpType")
-// 			.endClass()
-// 			.beginClass<K>("K")
-// 				.addFunction("BeginChild", &K::BeginChild)
-// 				.addFunction("DataWriter", &K::DataWriter)
-// 				.addFunction("EndChild", &K::EndChild)
-// 				.addFunction("SaveToPath", &K::SaveToPath)
-// // 				.addFunction("Write", &K::Write)
-// // 				.addFunction("Write", &K::Write)
-// // 				.addFunction("Write", &K::Write)
-// 				.addFunction("WriteComment", &K::WriteComment)
-// // 				.addFunction("WriteToken", &K::WriteToken)
-// // 				.addFunction("WriteToken", &K::WriteToken)
-// // 				.addFunction("WriteToken", &K::WriteToken)
 // 			.endClass()
 // 			.beginClass<Ship::Leak>("Leak")
 // 				.addFunction("Acceleration", &Leak::Acceleration)
@@ -2252,4 +2318,22 @@ void LuaImpl::registerAll(lua_State *L)
 // 				.addFunction("clone", &will::clone)
 // 			.endClass()
 		.endNamespace();
+
+//     luaL_dostring(L, R"(
+//         if ES.DataNode then
+//             print("DataNode class is registered")
+//             local methods = {"Size", "Tokens", "Token", "Value", "IsNumber", "BoolValue", "IsBool", "HasChildren", "PrintTrace", "GetChildren"}
+//             for _, method in ipairs(methods) do
+//                 if ES.DataNode[method] then
+//                     print("Method " .. method .. " is registered")
+//                 else
+//                     print("Method " .. method .. " is NOT registered")
+//                 end
+//             end
+//         else
+//             print("DataNode class is NOT registered")
+//         end
+//     )");
+
+
 }

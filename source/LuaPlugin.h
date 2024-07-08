@@ -18,6 +18,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "PlayerInfo.h"
 #include <filesystem>
+#include <string>
 
 extern "C"
 {
@@ -29,6 +30,9 @@ extern "C"
 using namespace std;
 
 namespace fs = std::filesystem;
+
+class DataNode;
+class DataWriter;
 
 class LuaPlugin
 {
@@ -42,9 +46,13 @@ public:
 	LuaPlugin(const LuaPlugin&) = delete;
 	LuaPlugin& operator=(const LuaPlugin&) = delete;
 
+	void runAddCrew(int crewCount);
 	void runDaily();
 	void runInit();
-	void runAddCrew(int crewCount);
+	void runLoad(const DataNode &node);
+	void runSave(DataWriter &out) const;
+
+	const std::string& getName() const { return name; }
 
 private:
 	struct LuaDeleter {
@@ -55,9 +63,12 @@ private:
 
 	std::unique_ptr<lua_State, LuaDeleter> Lpointer;
 	fs::path plugin_dir;
+	std::string name;
+	int addCrew = LUA_NOREF;
 	int daily = LUA_NOREF;
 	int init = LUA_NOREF;
-	int addCrew = LUA_NOREF;
+	int load = LUA_NOREF;
+	int save = LUA_NOREF;
 };
 
 #endif // ES_LUA_PLUGIN_H_

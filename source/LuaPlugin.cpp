@@ -15,6 +15,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "LuaPlugin.h"
 
+#include "DataNode.h"
+#include "DataWriter.h"
 #include "Files.h"
 #include "Logger.h"
 #include "LuaImpl.h"
@@ -90,7 +92,7 @@ namespace {
 }
 
 LuaPlugin::LuaPlugin(const std::string &name, const std::string &path, PlayerInfo *player)
-	: Lpointer(luaL_newstate())
+	: Lpointer(luaL_newstate()), name(name)
 {
 	if (!Lpointer) {
 		Logger::LogError("Failed to create Lua state");
@@ -136,15 +138,26 @@ LuaPlugin::LuaPlugin(const std::string &name, const std::string &path, PlayerInf
 		lua_setglobal(L, "player");
 
 		// Safely get function references
-		this->init = lua_fn_field_ref(L, "es_init");
-		this->daily = lua_fn_field_ref(L, "es_daily");
 		this->addCrew = lua_fn_field_ref(L, "es_add_crew");
+		this->daily = lua_fn_field_ref(L, "es_daily");
+		this->init = lua_fn_field_ref(L, "es_init");
+		this->load = lua_fn_field_ref(L, "es_load");
+		this->save = lua_fn_field_ref(L, "es_save");
 
 	} catch (const std::exception& e) {
 		Logger::LogError("LuaPlugin initialization error: " + std::string(e.what()));
 		lua_close(L);
 		Lpointer.release();
 	}
+}
+
+void LuaPlugin::runAddCrew(int crewCount)
+{
+	auto addCrewParams = [crewCount](lua_State *L) -> int {
+		lua_pushinteger(L, crewCount);
+		return 1;
+	};
+	runRawChecked(Lpointer.get(), addCrew, "es_add_crew", addCrewParams);
 }
 
 void LuaPlugin::runDaily()
@@ -157,11 +170,39 @@ void LuaPlugin::runInit()
 	runRawChecked(Lpointer.get(), init, "es_init");
 }
 
-void LuaPlugin::runAddCrew(int crewCount)
+void LuaPlugin::runLoad(const DataNode &node)
 {
-	auto addCrewParams = [crewCount](lua_State *L) -> int {
-		lua_pushinteger(L, crewCount);
-		return 1;
-	};
-	runRawChecked(Lpointer.get(), addCrew, "es_add_crew", addCrewParams);
+	if(load != LUA_NOREF && node.Token(1) == name)
+	{
+		auto loadParams = [&node](lua_State *L) -> int {
+			auto result = luabridge::push(L, &node);
+			if (!result)
+			{
+				Logger::LogError("Failed to push DataNode to Lua stack: " + result.message());
+				return 0;
+			}
+			return 1;
+		};
+		runRawChecked(Lpointer.get(), load, "es_load", loadParams);
+	}
+}
+
+void LuaPlugin::runSave(DataWriter &out) const
+{
+	if(save != LUA_NOREF)
+	{
+		out.Write("lua script", name);
+		out.BeginChild();
+		auto saveParams = [&out](lua_State *L) -> int {
+			auto result = luabridge::push(L, &out);
+			if (!result)
+			{
+				Logger::LogError("Failed to push DataWriter to Lua stack: " + result.message());
+				return 0;
+			}
+			return 1;
+		};
+		runRawChecked(Lpointer.get(), save, "es_save", saveParams);
+		out.EndChild();
+	}
 }

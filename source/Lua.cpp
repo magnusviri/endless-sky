@@ -40,28 +40,42 @@ void Lua::loadSource(const std::string &name, const std::string &path)
     plugins.emplace_back(name, path, _player);
 }
 
-void Lua::runInitScripts()
+void Lua::runAddCrew(int crewCount)
 {
-	Logger::LogError("runInitScripts");
 	for(auto &plugin : plugins)
 	{
-		plugin.runInit();
+		plugin.runAddCrew(crewCount);
 	}
 }
 
 void Lua::runDailyScripts()
 {
-	Logger::LogError("runDailyScripts");
 	for(auto &plugin : plugins)
 	{
 		plugin.runDaily();
 	}
 }
 
-void Lua::runAddCrew(int crewCount)
+void Lua::runInitScripts()
 {
 	for(auto &plugin : plugins)
 	{
-		plugin.runAddCrew(crewCount);
+		plugin.runInit();
+	}
+}
+
+void Lua::runLoadScripts(const DataNode &node)
+{
+	for(auto &plugin : plugins)
+	{
+		plugin.runLoad(node);
+	}
+}
+
+void Lua::runSaveScripts(DataWriter &out)
+{
+	for(auto &plugin : plugins)
+	{
+		plugin.runSave(out);
 	}
 }

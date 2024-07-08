@@ -22,13 +22,20 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
+class DataNode;
+class DataWriter;
+
 namespace Lua
 {
 	void registerPlayer(PlayerInfo &player);
 	void loadSource(const std::string &name, const std::string &path);
+	void runAddCrew(int crewCount);
 	void runDailyScripts();
 	void runInitScripts();
-	void runAddCrew(int crewCount);
+	void runLoadScripts(const DataNode &node);
+	void runSaveScripts(DataWriter &out);
+
 }
 
 #endif
+

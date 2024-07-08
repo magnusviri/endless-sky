@@ -410,6 +410,8 @@ void PlayerInfo::Load(const string &path)
 		}
 		else if(child.Token(0) == "start")
 			startData.Load(child);
+		else if(child.Token(0) == "lua script" && child.Size() >= 2)
+			Lua::runLoadScripts(child);
 	}
 	// Modify the game data with any changes that were loaded from this file.
 	ApplyChanges();
@@ -4583,6 +4585,9 @@ void PlayerInfo::Save(DataWriter &out) const
 			out.Write(plugin.name);
 	}
 	out.EndChild();
+
+	// Let each Lua plugin save state
+	Lua::runSaveScripts(out);
 }
 
 

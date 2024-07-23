@@ -48,6 +48,14 @@ void Lua::runAddCrew(int crewCount)
 	}
 }
 
+void Lua::runBoarding(int crewCount)
+{
+	for(auto &plugin : plugins)
+	{
+		plugin.runBoarding(crewCount);
+	}
+}
+
 void Lua::runDailyScripts()
 {
 	for(auto &plugin : plugins)

@@ -29,39 +29,38 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 namespace {
 	using ParamAdder = std::function<int(lua_State*)>;
 
-	void setLuaPackagePaths(lua_State* L, const std::filesystem::path& plugin_dir)
+	void setLuaPaths(lua_State* L, const std::filesystem::path& plugin_dir)
 	{
 		// Get Lua version
 		std::string lua_version = LUA_VERSION_MAJOR "." LUA_VERSION_MINOR;
 
 		std::filesystem::path scripts_dir = plugin_dir / "scripts";
+		std::string script = "scripts_dir = '" + (scripts_dir).string() + "'";
 
 		// Construct package.path
-// 		std::string packagePath = "package.path = package.path .. ';";
-		std::string packagePath = "package.path = '";
-		packagePath += (scripts_dir / "share/lua" / lua_version / "?.lua").string() + ";";
-		packagePath += (scripts_dir / "share/lua" / lua_version / "?/init.lua").string() + ";";
-		packagePath += (scripts_dir / "lib/lua" / lua_version / "?.lua").string() + ";";
-		packagePath += (scripts_dir / "lib/lua" / lua_version / "?/init.lua").string() + ";";
-		packagePath += (scripts_dir / "?.lua").string() + ";";
-		packagePath += (scripts_dir / "?/init.lua").string() + "'";
-
-		// Set package.path
-		luaL_dostring(L, packagePath.c_str());
+// 		std::string script = "package.path = package.path .. ';";
+		script += "\npackage.path = '";
+		script += (scripts_dir / "share/lua" / lua_version / "?.lua").string() + ";";
+		script += (scripts_dir / "share/lua" / lua_version / "?/init.lua").string() + ";";
+		script += (scripts_dir / "lib/lua" / lua_version / "?.lua").string() + ";";
+		script += (scripts_dir / "lib/lua" / lua_version / "?/init.lua").string() + ";";
+		script += (scripts_dir / "?.lua").string() + ";";
+		script += (scripts_dir / "?/init.lua").string() + "'";
 
 		// Construct package.cpath (for C modules)
-// 		std::string packageCPath = "package.cpath = package.cpath .. ';";
-		std::string packageCPath = "package.cpath = '";
-		packageCPath += (scripts_dir / "lib/lua" / lua_version / "?.so").string() + ";";
-		packageCPath += (scripts_dir / "lib/lua" / lua_version / "?.dll").string() + "'";
+// 		std::string script = "package.cpath = package.cpath .. ';";
+		script += "\npackage.cpath = '";
+		script += (scripts_dir / "lib/lua" / lua_version / "?.so").string() + ";";
+		script += (scripts_dir / "lib/lua" / lua_version / "?.dll").string() + "'";
 
 		// Set package.cpath
-		luaL_dostring(L, packageCPath.c_str());
+		luaL_dostring(L, script.c_str());
 	}
 
 	int lua_fn_field_ref(lua_State *L, const char *fieldname)
 	{
 		const auto field_ty = lua_getfield(L, 1, fieldname);
+
 		if(field_ty == LUA_TFUNCTION)
 			return luaL_ref(L, LUA_REGISTRYINDEX);
 		else if(field_ty != LUA_TNIL)
@@ -113,18 +112,23 @@ LuaPlugin::LuaPlugin(const std::string &name, const std::string &path, PlayerInf
 		luaL_openlibs(L);
 		LuaImpl::registerAll(L);
 		const auto loaded = Files::Read(script_path.string());
-		setLuaPackagePaths(L, plugin_dir);
-
+		setLuaPaths(L, plugin_dir);
 		// Load the script
 		if (luaL_loadstring(L, loaded.c_str()) != LUA_OK) {
-			Logger::LogError("Error loading Lua script: " + std::string(lua_tostring(L, -1)));
+			Logger::LogError("Error loading Lua script: " + script_path.string() + ": " + std::string(lua_tostring(L, -1)));
 			lua_pop(L, 1);
 			return;
 		}
 
 		// Run the script
 		if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
-			Logger::LogError("Error executing Lua script: " + std::string(lua_tostring(L, -1)));
+			Logger::LogError("Error executing Lua script: " + script_path.string() + ": " + std::string(lua_tostring(L, -1)));
+			lua_pop(L, 1);
+			return;
+		}
+
+		if (!lua_istable(L, -1)) {
+			Logger::LogError("Error: Lua script did not return a table: " + script_path.string());
 			lua_pop(L, 1);
 			return;
 		}
@@ -139,6 +143,7 @@ LuaPlugin::LuaPlugin(const std::string &name, const std::string &path, PlayerInf
 
 		// Safely get function references
 		this->addCrew = lua_fn_field_ref(L, "es_add_crew");
+		this->boarding = lua_fn_field_ref(L, "es_boarding");
 		this->daily = lua_fn_field_ref(L, "es_daily");
 		this->init = lua_fn_field_ref(L, "es_init");
 		this->load = lua_fn_field_ref(L, "es_load");
@@ -158,6 +163,15 @@ void LuaPlugin::runAddCrew(int crewCount)
 		return 1;
 	};
 	runRawChecked(Lpointer.get(), addCrew, "es_add_crew", addCrewParams);
+}
+
+void LuaPlugin::runBoarding(int crewCount)
+{
+	auto boardingParams = [crewCount](lua_State *L) -> int {
+		lua_pushinteger(L, crewCount);
+		return 1;
+	};
+	runRawChecked(Lpointer.get(), boarding, "es_boarding", boardingParams);
 }
 
 void LuaPlugin::runDaily()

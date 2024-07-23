@@ -1,13 +1,17 @@
-print(package.path)
-print(package.cpath)
+--luarocks install --tree . inspect
+--print(package.path)
+--print(package.cpath)
 
 local inspect = require('inspect')
 
 local luatest = {}
+
+luatest.bla = 1
+
 function luatest.es_init()
 	es_debug("Loaded luatest.lua from data dir :)")
 	luatest.days = 0
-	print(inspect(_G))
+--	print(inspect(_G))
 end
 
 function luatest.es_daily()
@@ -32,17 +36,17 @@ function luatest.es_add_crew(crew_count)
 end
 
 function luatest.es_load(node)
-	print(node:Token(0))
-	print(node:Token(1))
-	print(node:HasChildren())
-	print(node:Size())
-	print(node.BoolValue)
-	print(node.Tokens)
-	print(node.PrintTrace)
-	print(node.Value) -- why is this a nil value?
-	print(node.IsNumber) -- why is this a nil value?
-	print(node.IsBool) -- why is this a nil value?
-	print(node.GetChildren) -- why is this a nil value?
+--	print(node:Token(0))
+--	print(node:Token(1))
+--	print(node:HasChildren())
+--	print(node:Size())
+--	print(node.BoolValue)
+--	print(node.Tokens)
+--	print(node.PrintTrace)
+--	print(node.Value) -- why is this a nil value?
+--	print(node.IsNumber) -- why is this a nil value?
+--	print(node.IsBool) -- why is this a nil value?
+--	print(node.GetChildren) -- why is this a nil value?
 
 --	local children = node:GetChildren()
 --	for i, child in ipairs(children) do

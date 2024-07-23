@@ -47,6 +47,7 @@ public:
 	LuaPlugin& operator=(const LuaPlugin&) = delete;
 
 	void runAddCrew(int crewCount);
+	void runBoarding(int crewCount);
 	void runDaily();
 	void runInit();
 	void runLoad(const DataNode &node);
@@ -65,6 +66,7 @@ private:
 	fs::path plugin_dir;
 	std::string name;
 	int addCrew = LUA_NOREF;
+	int boarding = LUA_NOREF;
 	int daily = LUA_NOREF;
 	int init = LUA_NOREF;
 	int load = LUA_NOREF;
